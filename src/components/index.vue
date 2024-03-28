@@ -1,0 +1,251 @@
+<template>
+  <n-global-style />
+  <n-grid class="notice" x-gap="12" :cols="1" :style="theme()">
+    <n-gi>
+      <div style="display: flex;flex-direction: row-reverse;margin: 10px 10px;">
+        <n-switch :default-value="isDarkTheme" @update:value="(v) => $emit('changeIsDarkTheme', v)" />
+      </div>
+      <div class="light-green" v-html="notice"></div>
+    </n-gi>
+  </n-grid>
+  <n-grid x-gap="10" y-gap="10" cols="2 s:3 m:4 l:5 xl:5 2xl:6" responsive="screen">
+    <n-grid-item class="cardclss" v-for="item in itemslist" :key="item.carID" :style="theme()">
+      <n-card size="small" bordered="false" content-style="box-class" content-class="box-class"
+              @click="redirectTo(item.carID)">
+        <div style="display: flex;align-items: center;justify-content: space-between;">
+          <div style="display: flex;align-items: center;">
+            <n-button text-color="white" :color="item.isPlus === 0 ? '#19c37d' : '#ab68ff'" type="tertiary"
+                      size="small">
+              {{ item.label }}
+            </n-button>
+
+            <n-button v-if="item.label.toLowerCase() === 'plus' && item.carID.toLowerCase().startsWith('t')"
+                      text-color="white" :color="'#68bceb'" type="tertiary" size="small" style="margin-left: 4px">
+              TEAM
+            </n-button>
+          </div>
+          <n-text class="title">{{ item.carID }}</n-text>
+        </div>
+
+        <div class="message-with-dot" :style="{ '--dot-color': customColor(item.color) }">
+          状态：{{ item.message }}
+        </div>
+
+      </n-card>
+    </n-grid-item>
+  </n-grid>
+
+
+</template>
+<script lang="ts">
+
+function uniqueArrayObjects(arr) {
+  const jsonObjectSet = new Set();
+  const uniqueArray = [];
+
+  arr.forEach(item => {
+    const jsonString = JSON.stringify(item);
+    if (!jsonObjectSet.has(jsonString)) {
+      jsonObjectSet.add(jsonString);
+      uniqueArray.push(item);
+    }
+  });
+
+  return uniqueArray;
+}
+
+import axios from 'axios';
+
+export default {
+  props: {
+    isDarkTheme: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data() {
+    return {
+      itemslist: [],
+      itemsplus: [],
+      notice: "",
+      total: 0,
+      page: 1,
+      isLoading: false,
+      hasMoreData: true,
+      minPage: 50
+    };
+  },
+  mounted() {
+    this.fetchData();
+    window.addEventListener('scroll', this.handleScroll);
+  },
+
+  methods: {
+    theme() {
+      return this.isDarkTheme ? { 'background-color': '#252529' } : { 'background-color': '#eff4f9' }
+    },
+    customColor(c) {
+      return c === 'yellow' ? '#ffc70b' : c;
+    },
+    fetchData() {
+      const isDev = import.meta.env.MODE === 'development'
+      if (!this.hasMoreData || this.isLoading) return; // 如果没有更多数据或正在加载，则不执行任何操作
+
+      this.isLoading = true;
+      axios.post(isDev ? '/api/carpage' : '/carpage', {
+        page: this.page,
+        size: this.minPage
+      })
+        .then(response => {
+          if (response.data.data.list === null) {
+            this.hasMoreData = false;
+            return;
+          }
+          this.notice = response.data.notice;
+          this.total = response.data?.data?.pagination?.total ?? 0;
+          let baseUrl = isDev ? '/api' : '';
+          let promises = response.data.data.list.map(item => {
+            let carname = encodeURIComponent(`${item.carID}`);
+            let requestUrl = `${baseUrl}/endpoint?carid=${carname}`;
+            // 对每个 item 发起请求
+            return fetch(requestUrl)
+              .then(response => response.json()) // 假设 endpoint 返回 JSON
+              .then(data => {
+                // 返回修改后的 item，包括从 endpoint 获取的新数据
+                return { ...item, ...data };
+              })
+              .catch(error => {
+                console.error('Error fetching icon data:', error);
+                return item; // 发生错误时返回未修改的 item
+              });
+          });
+          this.page += 1;
+          Promise.all(promises).then(newItems => {
+            this.itemslist = uniqueArrayObjects([...this.itemslist, ...newItems]);
+          });
+        })
+        .catch(error => {
+          console.error('请求错误:', error);
+        })
+        .finally(() => {
+          this.isLoading = false;
+        });
+    },
+    handleScroll() {
+      const nearBottomOfPage = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+      if (nearBottomOfPage && !this.isLoading) {
+        console.log('handleScroll')
+        this.fetchData();
+      }
+    },
+    redirectTo(carID) {
+      window.location.href = `${window.location.origin
+      }/auth/login?carid=${encodeURI(carID)}`;
+    },
+    beforeDestroy() {
+      window.removeEventListener('scroll', this.handleScroll);
+    }
+  }
+};
+
+</script>
+
+
+
+<style>
+#app {
+  padding: 10px;
+}
+
+.n-button {
+  border-radius: 7px;
+}
+
+.n-gradient-text {
+  margin-top: 10px;
+}
+
+.message-with-dot {
+  margin-top: 10px;
+  position: relative;
+  padding-left: 20px;
+  color: gray;
+  font-size: 12px;
+}
+
+.message-with-dot:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--dot-color);
+  border: 1px #e7eeed solid;
+}
+
+
+.box-class {
+  border-radius: 10px !important;
+
+}
+
+.box-class .status {
+  margin-top: 10px;
+}
+
+.box-class:hover {
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.n-button {
+  width: 50px;
+  height: 20px;
+  line-height: 20px;
+  font-size: 10px;
+}
+
+.n-button span {
+  font-weight: 800;
+}
+
+.cardclss .title {
+  font-weight: 600;
+  margin-left: 5px;
+}
+
+.notice {
+  /*color: #67c23a;*/
+  border-radius: 10px !important;
+  margin-bottom: 20px;
+}
+
+.light-green {
+  padding: 0 20px 20px 20px;
+  border-radius: 10px;
+  background: none;
+}
+
+.cardclss {
+  border-radius: 10px !important;
+}
+
+.n-card {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.n-card:hover {
+  cursor: pointer;
+}
+
+.cardclss .n-card {
+  border: 0 !important;
+  color: black;
+  text-align: left;
+  --n-close-border-radius: 10px !important;
+  background: none;
+}
+</style>
