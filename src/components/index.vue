@@ -3,7 +3,14 @@
   <n-grid class="notice" x-gap="12" :cols="1" :style="theme()">
     <n-gi>
       <div style="display: flex;flex-direction: row-reverse;margin: 10px 10px;">
-        <n-switch :default-value="isDarkTheme" @update:value="(v) => $emit('changeIsDarkTheme', v)" />
+        <n-switch :default-value="isDarkTheme" @update:value="(v) => $emit('changeIsDarkTheme', v)" >
+          <template #checked-icon>
+            <DarkModeOutlined />
+          </template>
+          <template #unchecked-icon>
+            <DarkModeTwotone />
+          </template>
+        </n-switch>
       </div>
       <div class="light-green" v-html="notice"></div>
     </n-gi>
@@ -35,6 +42,10 @@
     </n-grid-item>
   </n-grid>
 
+  <n-divider dashed title-placement="center" style="font-size: 14px" v-if="itemslist.length < total">
+    上拉加载更多
+  </n-divider>
+
 
 </template>
 <script lang="ts">
@@ -54,14 +65,20 @@ function uniqueArrayObjects(arr) {
   return uniqueArray;
 }
 
-import axios from 'axios';
+const isDev = import.meta.env.MODE === 'development'
 
+import axios from 'axios';
+import { DarkModeTwotone, DarkModeOutlined } from '@vicons/material'
 export default {
   props: {
     isDarkTheme: {
       type: Boolean,
       default: false
     }
+  },
+  components: {
+    DarkModeTwotone,
+    DarkModeOutlined
   },
   data() {
     return {
@@ -78,9 +95,46 @@ export default {
   mounted() {
     this.fetchData();
     window.addEventListener('scroll', this.handleScroll);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  },
+
+  beforeDestroy() {
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   },
 
   methods: {
+    handleVisibilityChange() {
+      if (!document.hidden) {
+        this.updateEndpointStatus(this.itemslist, true)
+      }
+    },
+    updateEndpointStatus(list, forkUpdate = false) {
+      try {
+        let baseUrl = isDev ? '/api' : '';
+        let promises = list.map(item => {
+          let carname = encodeURIComponent(`${item.carID}`);
+          let requestUrl = `${baseUrl}/endpoint?carid=${carname}`;
+          return fetch(requestUrl)
+            .then(response => response.json())
+            .then(data => {
+              return { ...item, ...data };
+            })
+            .catch(error => {
+              console.error('Error fetching icon data:', error);
+              return item; // 发生错误时返回未修改的 item
+            });
+        });
+        Promise.all(promises).then(newItems => {
+          if (forkUpdate) {
+            this.itemslist = uniqueArrayObjects(newItems);
+          } else {
+            this.itemslist = uniqueArrayObjects([...this.itemslist, ...newItems]);
+          }
+        });
+      } catch (e) {
+        console.error('请求错误:', e);
+      }
+    },
     theme() {
       return this.isDarkTheme ? { 'background-color': '#252529' } : { 'background-color': '#eff4f9' }
     },
@@ -88,7 +142,6 @@ export default {
       return c === 'yellow' ? '#ffc70b' : c;
     },
     fetchData() {
-      const isDev = import.meta.env.MODE === 'development'
       if (!this.hasMoreData || this.isLoading) return; // 如果没有更多数据或正在加载，则不执行任何操作
 
       this.isLoading = true;
@@ -103,26 +156,9 @@ export default {
           }
           this.notice = response.data.notice;
           this.total = response.data?.data?.pagination?.total ?? 0;
-          let baseUrl = isDev ? '/api' : '';
-          let promises = response.data.data.list.map(item => {
-            let carname = encodeURIComponent(`${item.carID}`);
-            let requestUrl = `${baseUrl}/endpoint?carid=${carname}`;
-            // 对每个 item 发起请求
-            return fetch(requestUrl)
-              .then(response => response.json()) // 假设 endpoint 返回 JSON
-              .then(data => {
-                // 返回修改后的 item，包括从 endpoint 获取的新数据
-                return { ...item, ...data };
-              })
-              .catch(error => {
-                console.error('Error fetching icon data:', error);
-                return item; // 发生错误时返回未修改的 item
-              });
-          });
+
           this.page += 1;
-          Promise.all(promises).then(newItems => {
-            this.itemslist = uniqueArrayObjects([...this.itemslist, ...newItems]);
-          });
+          this.updateEndpointStatus(response.data?.data?.list);
         })
         .catch(error => {
           console.error('请求错误:', error);
@@ -134,7 +170,7 @@ export default {
     handleScroll() {
       const nearBottomOfPage = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
       if (nearBottomOfPage && !this.isLoading) {
-        console.log('handleScroll')
+        // console.log('handleScroll')
         this.fetchData();
       }
     },
