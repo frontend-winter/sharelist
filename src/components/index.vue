@@ -1,17 +1,31 @@
 <template>
   <n-global-style />
+  <n-space justify="space-between">
+
+    <n-space align="center" style="margin: 2px 0">
+        当前登录用户：{{ password ? password : '-' }}
+    </n-space>
+
+    <n-space align="center" style="margin: 2px 0">
+      <n-button type="primary" style="font-size: 12px; width: 100px" v-if="password" @click="loginout">
+        退出登录
+      </n-button>
+<!--      <n-button type="primary" style="font-size: 12px; width: 100px" v-if="!password" @click="showModal = true">-->
+<!--        点击登录-->
+<!--      </n-button>-->
+
+      <n-switch :default-value="isDarkTheme" @update:value="(v) => $emit('changeIsDarkTheme', v)" >
+        <template #checked-icon>
+          <DarkModeOutlined />
+        </template>
+        <template #unchecked-icon>
+          <DarkModeTwotone />
+        </template>
+      </n-switch>
+    </n-space>
+  </n-space>
   <n-grid class="notice" x-gap="12" :cols="1" :style="theme()">
     <n-gi>
-      <div style="display: flex;flex-direction: row-reverse;margin: 10px 10px;">
-        <n-switch :default-value="isDarkTheme" @update:value="(v) => $emit('changeIsDarkTheme', v)" >
-          <template #checked-icon>
-            <DarkModeOutlined />
-          </template>
-          <template #unchecked-icon>
-            <DarkModeTwotone />
-          </template>
-        </n-switch>
-      </div>
       <div class="light-green" v-html="notice"></div>
     </n-gi>
   </n-grid>
@@ -46,10 +60,11 @@
     上拉加载更多
   </n-divider>
 
+  <Login :showModal="showModal" @changeShowModal="changeShowModal" @changeConfig="changeConfig" />
 
 </template>
 <script lang="ts">
-
+import { BASE_PASSWORD_KEY, getCookie, deleteCookie } from '../lib/Cookies'
 function uniqueArrayObjects(arr) {
   const jsonObjectSet = new Set();
   const uniqueArray = [];
@@ -69,6 +84,8 @@ const isDev = import.meta.env.MODE === 'development'
 
 import axios from 'axios';
 import { DarkModeTwotone, DarkModeOutlined } from '@vicons/material'
+
+import Login from './Login.vue'
 export default {
   props: {
     isDarkTheme: {
@@ -78,7 +95,8 @@ export default {
   },
   components: {
     DarkModeTwotone,
-    DarkModeOutlined
+    DarkModeOutlined,
+    Login
   },
   data() {
     return {
@@ -89,11 +107,16 @@ export default {
       page: 1,
       isLoading: false,
       hasMoreData: true,
-      minPage: 50
+      minPage: 50,
+      showModal: false,
+      password: '',
+      currentCarID: null
     };
   },
   mounted() {
     this.fetchData();
+    this.password = getCookie(BASE_PASSWORD_KEY);
+
     window.addEventListener('scroll', this.handleScroll);
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
   },
@@ -103,6 +126,17 @@ export default {
   },
 
   methods: {
+    changeConfig(p){
+      window.location.href = `${window.location.origin
+      }/auth/logintoken?carid=${this.currentCarID}&usertoken=${p}`;
+    },
+    loginout() {
+      this.password = '';
+      deleteCookie(BASE_PASSWORD_KEY);
+    },
+    changeShowModal(v) {
+      this.showModal = v;
+    },
     handleVisibilityChange() {
       if (!document.hidden) {
         this.updateEndpointStatus(this.itemslist, true)
@@ -175,8 +209,13 @@ export default {
       }
     },
     redirectTo(carID) {
-      window.location.href = `${window.location.origin
-      }/auth/login?carid=${encodeURI(carID)}`;
+      this.currentCarID = carID;
+      if (this.password) {
+        this.changeConfig(this.password);
+        return
+      }
+      this.showModal = true;
+
     },
     beforeDestroy() {
       window.removeEventListener('scroll', this.handleScroll);
@@ -188,7 +227,7 @@ export default {
 
 
 
-<style>
+<style scoped>
 #app {
   padding: 10px;
 }
@@ -271,6 +310,11 @@ export default {
 .n-card {
   height: 100% !important;
   width: 100% !important;
+
+  border-radius: 5px;
+  max-width: 300px;
+  background-color: rgba(46, 51, 56, 0.09);
+  color: white;
 }
 
 .n-card:hover {

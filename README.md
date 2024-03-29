@@ -11,11 +11,17 @@
 - 2024-03-26 增`加Team 账号显示，车队名称带T的就会`显示；
 - 2024-03-27 增加主题切换功能,增加上拉加载功能；
 - 2024-03-28 更改默认主题为Dark、增加Dark图标、增加页签切换自动车辆刷新状态、增加上拉加载更多提醒；
+- 2024-03-29 增加用户登录系统、输入密码后无需再次输入密码；
 
 
 ## 一键快速替换前端页面：
+- 无登录页面
 ```shell
 curl -sSfL https://raw.githubusercontent.com/frontend-winter/sharelist/master/quick-install/quick-list.sh | bash
+```
+- 带登录页面
+```shell
+curl -sSfL https://raw.githubusercontent.com/frontend-winter/sharelist/login/quick-install/quick-list-login.sh | bash
 ```
 
 ![Image text](./quick-install/home.png)

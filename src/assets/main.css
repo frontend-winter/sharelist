@@ -7,12 +7,7 @@
 .plusicon{
     margin-bottom: 10px;
 }
-.n-card {
-    border-radius: 5px;
-    max-width: 300px;
-    background-color: rgba(46, 51, 56, 0.09);
-    color: white;
-}
+
 .light-green {
     padding: 30px;
     background-color: rgba(0, 128, 0, 0.12);
