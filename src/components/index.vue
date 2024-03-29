@@ -3,8 +3,8 @@
   <n-space justify="space-between">
 
     <n-space align="center" style="margin: 2px 0;">
-        当前登录用户：
-      <div style="width: 150px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;text-decoration: underline;">
+        已登录：
+      <div style="width: 190px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;text-decoration: underline;">
         {{ password ? password : '-' }}
       </div>
     </n-space>
