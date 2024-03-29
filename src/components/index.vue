@@ -3,8 +3,11 @@
   <n-space justify="space-between">
 
     <n-space align="center" style="margin: 2px 0;">
-        已登录：
-      <div style="width: 190px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;text-decoration: underline;">
+        UserToken：
+      <div style="width: 140px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;text-decoration: underline;" v-if="isMobile()">
+        {{ password ? password : '-' }}
+      </div>
+      <div style="text-decoration: underline;" v-else>
         {{ password ? password : '-' }}
       </div>
     </n-space>
@@ -68,6 +71,7 @@
 </template>
 <script lang="ts">
 import { BASE_PASSWORD_KEY, getCookie, deleteCookie } from '../lib/Cookies'
+import { isMobile } from '../lib/index'
 function uniqueArrayObjects(arr) {
   const jsonObjectSet = new Set();
   const uniqueArray = [];
@@ -129,6 +133,9 @@ export default {
   },
 
   methods: {
+    isMobile() {
+      return isMobile()
+    },
     changeConfig(p){
       window.location.href = `${window.location.origin
       }/auth/logintoken?carid=${this.currentCarID}&usertoken=${p}`;
