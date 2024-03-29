@@ -2,7 +2,7 @@
   <n-global-style />
   <n-space justify="space-between">
 
-    <n-space align="center" style="margin: 2px 0">
+    <n-space align="center" style="margin: 2px 0;width: 240px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">
         当前登录用户：{{ password ? password : '-' }}
     </n-space>
 

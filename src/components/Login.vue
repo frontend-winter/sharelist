@@ -21,7 +21,7 @@
         :model="formValue"
       >
         <n-form-item label="UserToken" path="password"  style="width: 100%">
-          <n-input v-model:value="formValue.password" placeholder="PleaseEnterUserToken" />
+          <n-input type="password" v-model:value="formValue.password" placeholder="PleaseEnterUserToken" />
         </n-form-item>
       </n-form>
       <template #footer>
