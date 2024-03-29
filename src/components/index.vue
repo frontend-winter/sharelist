@@ -2,12 +2,15 @@
   <n-global-style />
   <n-space justify="space-between">
 
-    <n-space align="center" style="margin: 2px 0;width: 240px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">
-        当前登录用户：{{ password ? password : '-' }}
+    <n-space align="center" style="margin: 2px 0;">
+        当前登录用户：
+      <div style="width: 150px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;text-decoration: underline;">
+        {{ password ? password : '-' }}
+      </div>
     </n-space>
 
     <n-space align="center" style="margin: 2px 0">
-      <n-button type="primary" style="font-size: 12px; width: 100px" v-if="password" @click="loginout">
+      <n-button type="primary" style="font-size: 12px; width: 80px" v-if="password" @click="loginout">
         退出登录
       </n-button>
 <!--      <n-button type="primary" style="font-size: 12px; width: 100px" v-if="!password" @click="showModal = true">-->
