@@ -27,4 +27,4 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-
+vite.config.js

@@ -16,8 +16,9 @@ export default defineComponent({
     const KEY = 'isDarkTheme';
     const localDarkTheme = localStorage.getItem(KEY);
 
-    // 默认为黑色主题
-    const isDarkTheme = ref(!localDarkTheme ? true : localDarkTheme === 'true');
+    // 默认为亮色主题
+    // const isDarkTheme = ref(!localDarkTheme ? true : localDarkTheme === 'true');
+    const isDarkTheme = ref(localDarkTheme === 'true');
     const changeIsDarkTheme = (v) => {
       isDarkTheme.value = v;
       localStorage.setItem(KEY, v);

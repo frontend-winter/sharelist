@@ -105,7 +105,11 @@ export default {
   methods: {
     handleVisibilityChange() {
       if (!document.hidden) {
-        this.updateEndpointStatus(this.itemslist, true)
+        /**
+         * 3-27：强制更新
+         * 3-30： 关闭，太费带宽
+         */
+        // this.updateEndpointStatus(this.itemslist, true)
       }
     },
     updateEndpointStatus(list, forkUpdate = false) {
