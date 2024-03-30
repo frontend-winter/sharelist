@@ -7,12 +7,12 @@
       <div style="width: 140px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;text-decoration: underline;" v-if="isMobile()">
         {{ password ? password : '-' }}
       </div>
-      <div style="text-decoration: underline;" v-else>
+      <div style="" v-else>
         {{ password ? password : '-' }}
       </div>
     </n-space>
 
-    <n-space align="center" style="margin: 2px 0">
+    <n-space align="center" style="margin: -2px 0">
       <n-button type="primary" style="font-size: 12px; width: 80px" v-if="password" @click="loginout">
         退出登录
       </n-button>
@@ -156,7 +156,7 @@ export default {
         // this.updateEndpointStatus(this.itemslist, true)
       }
     },
-    updateEndpointStatus(list, forkUpdate = false) {
+    async updateEndpointStatus(list, forkUpdate = false) {
       try {
         let baseUrl = isDev ? '/api' : '';
         let promises = list.map(item => {
@@ -172,7 +172,7 @@ export default {
               return item; // 发生错误时返回未修改的 item
             });
         });
-        Promise.all(promises).then(newItems => {
+        return Promise.all(promises).then(newItems => {
           if (forkUpdate) {
             this.itemslist = uniqueArrayObjects(newItems);
           } else {
@@ -192,12 +192,15 @@ export default {
     fetchData() {
       if (!this.hasMoreData || this.isLoading) return; // 如果没有更多数据或正在加载，则不执行任何操作
 
+      const loadingBar = useLoadingBar();
+      loadingBar.start()
+
       this.isLoading = true;
       axios.post(isDev ? '/api/carpage' : '/carpage', {
         page: this.page,
         size: this.minPage
       })
-        .then(response => {
+        .then(async response => {
           if (response.data.data.list === null) {
             this.hasMoreData = false;
             return;
@@ -206,10 +209,12 @@ export default {
           this.total = response.data?.data?.pagination?.total ?? 0;
 
           this.page += 1;
-          this.updateEndpointStatus(response.data?.data?.list);
+          await this.updateEndpointStatus(response.data?.data?.list);
+          loadingBar.finish()
         })
         .catch(error => {
           console.error('请求错误:', error);
+          loadingBar.error()
         })
         .finally(() => {
           this.isLoading = false;
