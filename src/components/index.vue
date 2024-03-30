@@ -2,7 +2,7 @@
   <n-global-style />
   <n-grid class="notice" x-gap="12" :cols="1" :style="theme()">
     <n-gi>
-      <div style="display: flex;flex-direction: row-reverse;margin: 10px 10px;">
+      <div style="display: flex;flex-direction: row-reverse;margin: 10px 10px 0 0;">
         <n-switch :default-value="isDarkTheme" @update:value="(v) => $emit('changeIsDarkTheme', v)" >
           <template #checked-icon>
             <DarkModeOutlined />
@@ -69,6 +69,7 @@ const isDev = import.meta.env.MODE === 'development'
 
 import axios from 'axios';
 import { DarkModeTwotone, DarkModeOutlined } from '@vicons/material'
+import { useLoadingBar } from 'naive-ui'
 export default {
   props: {
     isDarkTheme: {
@@ -112,7 +113,7 @@ export default {
         // this.updateEndpointStatus(this.itemslist, true)
       }
     },
-    updateEndpointStatus(list, forkUpdate = false) {
+    async updateEndpointStatus(list, forkUpdate = false) {
       try {
         let baseUrl = isDev ? '/api' : '';
         let promises = list.map(item => {
@@ -128,7 +129,7 @@ export default {
               return item; // 发生错误时返回未修改的 item
             });
         });
-        Promise.all(promises).then(newItems => {
+        return Promise.all(promises).then(newItems => {
           if (forkUpdate) {
             this.itemslist = uniqueArrayObjects(newItems);
           } else {
@@ -148,12 +149,15 @@ export default {
     fetchData() {
       if (!this.hasMoreData || this.isLoading) return; // 如果没有更多数据或正在加载，则不执行任何操作
 
+      const loadingBar = useLoadingBar();
+      loadingBar.start()
+
       this.isLoading = true;
       axios.post(isDev ? '/api/carpage' : '/carpage', {
         page: this.page,
         size: this.minPage
       })
-        .then(response => {
+        .then(async response => {
           if (response.data.data.list === null) {
             this.hasMoreData = false;
             return;
@@ -162,10 +166,12 @@ export default {
           this.total = response.data?.data?.pagination?.total ?? 0;
 
           this.page += 1;
-          this.updateEndpointStatus(response.data?.data?.list);
+          await this.updateEndpointStatus(response.data?.data?.list);
+          loadingBar.finish()
         })
         .catch(error => {
           console.error('请求错误:', error);
+          loadingBar.error()
         })
         .finally(() => {
           this.isLoading = false;
