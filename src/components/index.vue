@@ -90,7 +90,8 @@ export default {
       page: 1,
       isLoading: false,
       hasMoreData: true,
-      minPage: 50
+      minPage: 50,
+      loadingBar: null
     };
   },
   mounted() {
@@ -149,8 +150,10 @@ export default {
     fetchData() {
       if (!this.hasMoreData || this.isLoading) return; // 如果没有更多数据或正在加载，则不执行任何操作
 
-      const loadingBar = useLoadingBar();
-      loadingBar.start()
+      if (!this.loadingBar) {
+        this.loadingBar = useLoadingBar();
+      }
+      this.loadingBar.start()
 
       this.isLoading = true;
       axios.post(isDev ? '/api/carpage' : '/carpage', {
@@ -167,14 +170,16 @@ export default {
 
           this.page += 1;
           await this.updateEndpointStatus(response.data?.data?.list);
-          loadingBar.finish()
+          this.loadingBar.finish()
         })
         .catch(error => {
           console.error('请求错误:', error);
-          loadingBar.error()
+          this.loadingBar.error()
         })
         .finally(() => {
           this.isLoading = false;
+
+          this.loadingBar.finish()
         });
     },
     handleScroll() {
