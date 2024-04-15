@@ -35,7 +35,7 @@
         </div>
 
         <div class="message-with-dot" :style="{ '--dot-color': customColor(item.color) }">
-          状态：{{ item.message }}
+          状态：{{ item.message?.replaceAll('空闲|', '')?.replaceAll('繁忙|', '') }}
         </div>
 
       </n-card>
