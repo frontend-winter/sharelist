@@ -1,5 +1,6 @@
 <template>
   <n-config-provider :theme="isDarkTheme ? darkTheme : ''">
+    <GitHub />
     <n-loading-bar-provider>
       <Index :isDarkTheme="isDarkTheme" @changeIsDarkTheme="changeIsDarkTheme" />
     </n-loading-bar-provider>
@@ -9,11 +10,12 @@
 <script>
 import { defineComponent } from 'vue'
 import { darkTheme } from 'naive-ui'
-
+import GitHub from './components/Github.vue'
 import Index from './components/index.vue'
 export default defineComponent({
   components: {
-    Index
+    Index,
+    GitHub
   },
   setup() {
     const KEY = 'isDarkTheme';
