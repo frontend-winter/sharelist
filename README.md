@@ -1,4 +1,4 @@
-# 一款免费go语言开发的chatgpt-share-server外挂容器chatgpt-share-server-extend [感兴趣，去看看](https://github.com/frontend-winter/chatgpt-share-server)
+# 一款go语言开发的chatgpt-share-server外挂容器chatgpt-share-server-extend [感兴趣，去看看](https://github.com/frontend-winter/chatgpt-share-server)
 
 ## 基于Naiveui制作的ChatGPT-share 前端界面
 
